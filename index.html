@@ -69,6 +69,41 @@
     border-color:rgba(255,255,255,.5);
     color:var(--cream);
   }
+  header.top .header-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  header.top .tab-toggle.ghost{
+    background:transparent;
+    border-color:rgba(255,255,255,.5);
+    color:var(--cream);
+  }
+  header.top .tab-toggle.ghost:hover{
+    background:rgba(255,255,255,.1);
+  }
+
+  /* ---- View Request modal ---- */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(11,39,51,.55);
+    display:flex;align-items:center;justify-content:center;
+    padding:20px;z-index:50;
+  }
+  .modal{
+    background:var(--paper);
+    border-radius:var(--radius);
+    padding:26px;
+    width:100%;max-width:420px;
+    border-top:4px solid var(--gold);
+  }
+  .modal h3{color:var(--navy);font-size:1.1rem;margin-bottom:6px;}
+  .modal input[type=text]{margin-top:6px;}
+  .modal-actions{display:flex;gap:10px;margin-top:16px;}
+  .track-result{
+    margin-top:16px;
+    padding:14px;
+    background:#FBFAF6;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+  }
+  .track-row{font-size:.88rem;padding:5px 0;}
+  .track-row strong{color:var(--navy);}
   main{
     max-width:940px;
     margin:0 auto;
@@ -98,8 +133,10 @@
     margin:6px 0 16px;
   }
 
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 18px;}
   .grid .full{grid-column:1 / -1;}
   @media(max-width:640px){ .grid{grid-template-columns:1fr;} }
+  .divider{border:none;border-top:1px solid var(--line);margin:18px 0;}
   label{
     display:block;
     font-size:.82rem;
@@ -200,52 +237,64 @@
   .toolbar .status-line{font-size:.78rem;color:var(--ink-soft);}
   table{
     width:100%;
+    table-layout:fixed;
     border-collapse:collapse;
-    font-size:.82rem;
+    font-size:.76rem;
     background:#fff;
   }
   th,td{
     text-align:left;
-    padding:8px 9px;
+    padding:7px 8px;
     border-bottom:1px solid var(--line);
     vertical-align:top;
-    white-space:nowrap;
+    white-space:normal;
+    word-break:break-word;
   }
-  #respTable{min-width:1500px;}
   th{
     background:var(--navy);
     color:#fff;
-    position:sticky;
-    top:0;
     font-weight:600;
+    font-size:.72rem;
+    text-transform:uppercase;
+    letter-spacing:.02em;
   }
+  .cell-sub{display:block;color:var(--ink-soft);font-size:.72rem;margin-top:1px;}
   .tablewrap{
     overflow-x:auto;
     border:1px solid var(--line);
     border-radius:var(--radius);
-    max-height:70vh;
-    overflow-y:auto;
   }
-  a.viewfile{color:var(--navy);font-weight:600;text-decoration:underline;}
+  a.viewfile{color:var(--navy);font-weight:600;text-decoration:underline;display:block;font-size:.74rem;}
   .badge{
     display:inline-block;
     padding:3px 9px;
     border-radius:20px;
-    font-size:.72rem;
+    font-size:.7rem;
     font-weight:600;
     white-space:nowrap;
   }
   .badge.approval{background:#F2E5C8;color:#8A6A16;}
   .badge.approved{background:#DCEEE0;color:var(--ok);}
   .badge.shipping{background:#DCE7F2;color:#26557F;}
-  .rowbtns{display:flex;gap:6px;flex-wrap:wrap;}
   .remarks-input{
-    width:140px;
+    width:100%;
     padding:5px 6px;
-    font-size:.78rem;
+    font-size:.76rem;
     border:1px solid var(--line);
     border-radius:var(--radius);
   }
+  .status-select{
+    width:100%;
+    padding:6px 7px;
+    font-size:.76rem;
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    background:#fff;
+    color:var(--ink);
+  }
+  .status-select:focus{outline:2px solid var(--navy);outline-offset:1px;}
   .reps-card{margin-top:26px;}
   .reps-list{font-size:.85rem;}
   .reps-list div.rep-row{
@@ -265,7 +314,10 @@
     <h1>Client Transaction Intake</h1>
     <div class="sub">Submit a request &amp; track its status</div>
   </div>
-  <button id="tabToggleBtn" class="tab-toggle" onclick="toggleTab()">Responses</button>
+  <div class="header-actions">
+    <button class="tab-toggle ghost" onclick="openTrackModal()">View Request</button>
+    <button id="tabToggleBtn" class="tab-toggle" onclick="toggleTab()">Responses</button>
+  </div>
 </header>
 
 <main id="mainEl">
@@ -273,9 +325,11 @@
   <!-- ================= FORM TAB ================= -->
   <section id="tabForm">
     <div class="card">
-      <div class="section-title">Client details</div>
-      <div class="section-note">Basic information about the person the transaction is for.</div>
-             <div class="field">
+      <div class="section-title">Client Transaction Request</div>
+      <div class="section-note">Fill in the client, transaction, and representative details, then attach the required files below.</div>
+
+      <div class="grid">
+        <div class="field">
           <label>Name of Client <span class="req">*</span></label>
           <input type="text" id="f_name" required>
         </div>
@@ -287,12 +341,7 @@
           <label>Contact No. of Client <span class="req">*</span></label>
           <input type="tel" id="f_contact" required>
         </div>
-      </div>
-
-    <div class="card">
-      <div class="section-title">Transaction</div>
-      <div class="section-note">What the client is requesting, and when they're expected.</div>
-        <div class="field full">
+        <div class="field">
           <label>Transaction <span class="req">*</span></label>
           <select id="f_transaction" required>
             <option value="">Select a transaction type</option>
@@ -314,13 +363,6 @@
           <label>Appointment Date <span class="opt">optional</span></label>
           <input type="date" id="f_apptDate">
         </div>
-      </div>
-    
-
-    <div class="card">
-      <div class="section-title">Representative</div>
-      <div class="section-note">The staff member handling this transaction on the client's behalf.</div>
-     
         <div class="field">
           <label>Representative <span class="req">*</span></label>
           <input type="text" id="f_rep" required>
@@ -329,48 +371,42 @@
           <label>Office/Division of Representative <span class="req">*</span></label>
           <input type="text" id="f_office" required>
         </div>
-      
-    </div>
 
-    <div class="card">
-      <div class="section-title">Uploads</div>
-      <div class="section-note">Photos can be taken directly with a phone camera or chosen from files.</div>
+        <div class="field full">
+          <label>Upload photo of Transaction Form <span class="req">*</span></label>
+          <div class="filewrap">
+            <input type="file" id="f_photo" accept="image/*" capture="environment" required>
+            <div class="filename" id="f_photo_name"></div>
+          </div>
+        </div>
 
-      <div class="field">
-        <label>Upload photo of Transaction Form <span class="req">*</span></label>
-        <div class="filewrap">
-          <input type="file" id="f_photo" accept="image/*" capture="environment" required>
-          <div class="filename" id="f_photo_name"></div>
+        <div class="field full">
+          <label>Authorization Letter <span class="req">*</span></label>
+          <div class="filewrap">
+            <input type="file" id="f_authLetter" accept="image/*,.pdf" required>
+            <div class="filename" id="f_authLetter_name"></div>
+          </div>
+        </div>
+
+        <div class="field full">
+          <label>Attachments (COGS/Surety Bond) <span class="opt">not required</span></label>
+          <div class="filewrap">
+            <input type="file" id="f_attachments" accept="image/*,.pdf">
+            <div class="filename" id="f_attachments_name"></div>
+          </div>
+        </div>
+
+        <div class="field full">
+          <div class="consent-row">
+            <input type="checkbox" id="f_consent" required>
+            <span>I confirm the client has agreed to be contacted for verification of this transaction. <span class="req">*</span></span>
+          </div>
         </div>
       </div>
 
-      <div class="field">
-        <label>Authorization Letter <span class="req">*</span></label>
-        <div class="filewrap">
-          <input type="file" id="f_authLetter" accept="image/*,.pdf" required>
-          <div class="filename" id="f_authLetter_name"></div>
-        </div>
-      </div>
-
-      <div class="field">
-        <label>Attachments (COGS/Surety Bond) <span class="opt">not required</span></label>
-        <div class="filewrap">
-          <input type="file" id="f_attachments" accept="image/*,.pdf">
-          <div class="filename" id="f_attachments_name"></div>
-        </div>
-      </div>
+      <button class="btn" id="submitBtn" onclick="submitForm()" style="margin-top:18px;">Submit request</button>
+      <div class="msg" id="formMsg"></div>
     </div>
-
-    <div class="card">
-      <div class="section-title">Consent</div>
-      <div class="consent-row">
-        <input type="checkbox" id="f_consent" required>
-        <span>I confirm the client has agreed to be contacted for verification of this transaction. <span class="req">*</span></span>
-      </div>
-    </div>
-
-    <button class="btn" id="submitBtn" onclick="submitForm()">Submit request</button>
-    <div class="msg" id="formMsg"></div>
   </section>
 
   <!-- ================= RESPONSES TAB ================= -->
@@ -386,38 +422,65 @@
     </div>
 
     <div id="responsesArea" style="display:none;">
-      <div class="toolbar">
-        <div class="status-line" id="statusLine">Loading…</div>
-        <div class="rowbtns">
-          <button class="btn secondary small" onclick="exportPDF()">Export PDF (landscape)</button>
-          <button class="btn secondary small" onclick="exportExcel()">Export Excel</button>
-          <button class="btn secondary small" onclick="lockAgain()">Lock</button>
+      <div class="card">
+        <div class="toolbar">
+          <div class="status-line" id="statusLine">Loading…</div>
+          <div class="rowbtns">
+            <button class="btn secondary small" onclick="exportPDF()">Export PDF (landscape)</button>
+            <button class="btn secondary small" onclick="exportExcel()">Export Excel</button>
+            <button class="btn secondary small" onclick="lockAgain()">Lock</button>
+          </div>
         </div>
-      </div>
 
-      <div class="tablewrap">
-        <table id="respTable">
-          <thead>
-            <tr>
-              <th>ID No.</th><th>Status</th><th>Name</th><th>Profession</th><th>Transaction</th>
-              <th>Appt. Place</th><th>Appt. Date</th><th>Contact</th>
-              <th>Representative</th><th>Office/Division</th>
-              <th>Transaction Form</th><th>Authorization Letter</th><th>Attachments</th>
-              <th>Consent</th><th>Submitted</th><th>Remarks</th><th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="respTbody"></tbody>
-        </table>
-      </div>
+        <div class="tablewrap">
+          <table id="respTable">
+            <thead>
+              <tr>
+                <th style="width:8%;">ID No.</th>
+                <th style="width:9%;">Status</th>
+                <th style="width:13%;">Client</th>
+                <th style="width:14%;">Transaction</th>
+                <th style="width:12%;">Representative</th>
+                <th style="width:9%;">Contact</th>
+                <th style="width:9%;">Files</th>
+                <th style="width:6%;">Consent</th>
+                <th style="width:8%;">Submitted</th>
+                <th style="width:8%;">Remarks</th>
+                <th style="width:9%;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="respTbody"></tbody>
+          </table>
+        </div>
 
-      <div class="card reps-card">
-        <div class="section-title">Representatives — transaction counts</div>
+        <hr class="divider">
+
+        <div class="section-title" style="border:none;padding-bottom:0;">Representatives — transaction counts</div>
         <div class="reps-list" id="repsList"></div>
       </div>
     </div>
   </section>
 
 </main>
+
+<!-- ================= VIEW REQUEST MODAL ================= -->
+<div class="modal-overlay" id="trackOverlay" style="display:none;">
+  <div class="modal">
+    <h3>Check Your Request Status</h3>
+    <p class="section-note">Enter the Request ID you were given after submitting your transaction.</p>
+    <input type="text" id="trackIdInput" placeholder="e.g. 4F82A9C1" style="text-transform:uppercase;">
+    <div class="msg" id="trackMsg"></div>
+    <div class="track-result" id="trackResult" style="display:none;">
+      <div class="track-row"><strong>Name of Client:</strong> <span id="trackName"></span></div>
+      <div class="track-row"><strong>Profession:</strong> <span id="trackProfession"></span></div>
+      <div class="track-row"><strong>Status:</strong> <span id="trackStatus"></span></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="checkStatus()">Check Status</button>
+      <button class="btn secondary" onclick="closeTrackModal()">Close</button>
+    </div>
+  </div>
+</div>
 
 <footer class="note">
   Files are stored in Google Drive; entries are stored in Google Sheets. This page reads and writes to that sheet in real time through a Google Apps Script API.
@@ -536,8 +599,10 @@ async function submitForm(){
       msg.className = 'msg err'; msg.style.display='block';
       msg.textContent = data.error || 'Something went wrong. Please try again.';
     } else {
+      const shortId = data.id ? String(data.id).slice(0, 8).toUpperCase() : '';
       msg.className = 'msg ok'; msg.style.display='block';
-      msg.textContent = 'Request submitted. It now shows as "For Approval" in Responses.';
+      msg.innerHTML = 'Request submitted and marked "For Approval". Your Request ID is <strong>' + shortId +
+        '</strong> — save it to check the status later using the "View Request" button above.';
       document.querySelectorAll('#tabForm input[type=text], #tabForm input[type=tel], #tabForm input[type=date]').forEach(i=>i.value='');
       document.getElementById('f_transaction').value = '';
       document.getElementById('f_consent').checked = false;
@@ -570,6 +635,53 @@ function lockAgain(){
   if (refreshTimer){ clearInterval(refreshTimer); refreshTimer=null; }
 }
 
+/* ---------------- view request (client-facing status check) ---------------- */
+function openTrackModal(){
+  document.getElementById('trackOverlay').style.display = 'flex';
+  document.getElementById('trackIdInput').value = '';
+  document.getElementById('trackMsg').style.display = 'none';
+  document.getElementById('trackResult').style.display = 'none';
+  document.getElementById('trackIdInput').focus();
+}
+function closeTrackModal(){
+  document.getElementById('trackOverlay').style.display = 'none';
+}
+async function checkStatus(){
+  const id = document.getElementById('trackIdInput').value.trim();
+  const trackMsg = document.getElementById('trackMsg');
+  const trackResult = document.getElementById('trackResult');
+  trackMsg.style.display = 'none';
+  trackResult.style.display = 'none';
+
+  if (!id){
+    trackMsg.className = 'msg err'; trackMsg.style.display = 'block';
+    trackMsg.textContent = 'Please enter your Request ID.';
+    return;
+  }
+
+  try {
+    const url = API_URL + '?action=trackStatus&id=' + encodeURIComponent(id);
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!data.ok){
+      trackMsg.className = 'msg err'; trackMsg.style.display = 'block';
+      trackMsg.textContent = data.error || 'Request not found.';
+      return;
+    }
+    document.getElementById('trackName').textContent = data.name || '';
+    document.getElementById('trackProfession').textContent = data.profession || '';
+    document.getElementById('trackStatus').innerHTML = statusBadge(data.status);
+    trackResult.style.display = 'block';
+  } catch(err){
+    trackMsg.className = 'msg err'; trackMsg.style.display = 'block';
+    trackMsg.textContent = 'Network error — please try again.';
+    console.error(err);
+  }
+}
+document.getElementById('trackIdInput')?.addEventListener('keydown', e=>{
+  if (e.key === 'Enter') checkStatus();
+});
+
 async function loadResponses(isFirstLoad){
   const pw = sessionStorage.getItem('resp_pw');
   if (!pw) return;
@@ -601,7 +713,17 @@ async function loadResponses(isFirstLoad){
 
 function statusBadge(status){
   const cls = status === 'Approved' ? 'approved' : status === 'For Shipping' ? 'shipping' : 'approval';
-  return '<span class="badge '+cls+'">'+status+'</span>';
+  return '<span class="badge '+cls+'">'+escapeHtml(status || 'For Approval')+'</span>';
+}
+
+const STATUS_OPTIONS = ['For Approval', 'Approved', 'For Shipping'];
+
+function statusSelect(id, currentStatus){
+  const status = currentStatus || 'For Approval';
+  const opts = STATUS_OPTIONS.map(s =>
+    `<option value="${s}" ${s === status ? 'selected' : ''}>${s}</option>`
+  ).join('');
+  return `<select class="status-select" data-id="${id}" onchange="updateStatus('${id}', this.value)">${opts}</select>`;
 }
 
 function renderTable(){
@@ -610,27 +732,20 @@ function renderTable(){
   lastData.forEach(r=>{
     const tr = document.createElement('tr');
     const idShort = r.id ? String(r.id).slice(0, 8).toUpperCase() : '';
+    const apptBits = [r.appointmentPlace, r.appointmentDate ? String(r.appointmentDate).slice(0,10) : '']
+      .filter(Boolean).join(' · ');
     tr.innerHTML = `
       <td title="${escapeAttr(r.id || '')}">${idShort}</td>
-      <td>${statusBadge(r.status || 'For Approval')}</td>
-      <td>${escapeHtml(r.name)}</td>
-      <td>${escapeHtml(r.profession)}</td>
-      <td>${escapeHtml(r.transaction)}</td>
-      <td>${escapeHtml(r.appointmentPlace || '')}</td>
-      <td>${r.appointmentDate ? escapeHtml(String(r.appointmentDate).slice(0,10)) : ''}</td>
+      <td>${statusBadge(r.status)}</td>
+      <td>${escapeHtml(r.name)}<span class="cell-sub">${escapeHtml(r.profession)}</span></td>
+      <td>${escapeHtml(r.transaction)}${apptBits ? '<span class="cell-sub">'+escapeHtml(apptBits)+'</span>' : ''}</td>
+      <td>${escapeHtml(r.representative)}<span class="cell-sub">${escapeHtml(r.officeDivision)}</span></td>
       <td>${escapeHtml(r.contactNo)}</td>
-      <td>${escapeHtml(r.representative)}</td>
-      <td>${escapeHtml(r.officeDivision)}</td>
-      <td>${fileLink(r.transactionFormPhoto)}</td>
-      <td>${fileLink(r.authorizationLetter)}</td>
-      <td>${fileLink(r.attachments)}</td>
+      <td>${fileLink(r.transactionFormPhoto, 'Form')}${fileLink(r.authorizationLetter, 'Auth')}${fileLink(r.attachments, 'Attach')}</td>
       <td>${escapeHtml(r.consent || '')}</td>
-      <td>${r.timestamp ? new Date(r.timestamp).toLocaleString() : ''}</td>
+      <td>${r.timestamp ? new Date(r.timestamp).toLocaleDateString() : ''}</td>
       <td><input class="remarks-input" data-id="${r.id}" value="${escapeAttr(r.remarks || '')}"></td>
-      <td class="rowbtns">
-        <button class="btn small" onclick="updateStatus('${r.id}','Approved')">Approve</button>
-        <button class="btn small secondary" onclick="updateStatus('${r.id}','For Shipping')">For Shipping</button>
-      </td>
+      <td>${statusSelect(r.id, r.status)}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -663,9 +778,9 @@ async function updateStatus(id, status){
   }
 }
 
-function fileLink(url){
-  if (!url) return '<span style="color:#999;">—</span>';
-  return `<a class="viewfile" href="${url}" target="_blank" rel="noopener">View file</a>`;
+function fileLink(url, label){
+  if (!url) return '';
+  return `<a class="viewfile" href="${url}" target="_blank" rel="noopener">${escapeHtml(label)}</a>`;
 }
 function escapeHtml(s){
   return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
