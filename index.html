@@ -97,11 +97,7 @@
     color:var(--ink-soft);
     margin:6px 0 16px;
   }
-  .grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:16px;
-  }
+
   .grid .full{grid-column:1 / -1;}
   @media(max-width:640px){ .grid{grid-template-columns:1fr;} }
   label{
@@ -279,8 +275,7 @@
     <div class="card">
       <div class="section-title">Client details</div>
       <div class="section-note">Basic information about the person the transaction is for.</div>
-      <div class="grid">
-        <div class="field">
+             <div class="field">
           <label>Name of Client <span class="req">*</span></label>
           <input type="text" id="f_name" required>
         </div>
@@ -293,12 +288,10 @@
           <input type="tel" id="f_contact" required>
         </div>
       </div>
-    </div>
 
     <div class="card">
       <div class="section-title">Transaction</div>
       <div class="section-note">What the client is requesting, and when they're expected.</div>
-      <div class="grid">
         <div class="field full">
           <label>Transaction <span class="req">*</span></label>
           <select id="f_transaction" required>
@@ -322,12 +315,12 @@
           <input type="date" id="f_apptDate">
         </div>
       </div>
-    </div>
+    
 
     <div class="card">
       <div class="section-title">Representative</div>
       <div class="section-note">The staff member handling this transaction on the client's behalf.</div>
-      <div class="grid">
+     
         <div class="field">
           <label>Representative <span class="req">*</span></label>
           <input type="text" id="f_rep" required>
@@ -336,7 +329,7 @@
           <label>Office/Division of Representative <span class="req">*</span></label>
           <input type="text" id="f_office" required>
         </div>
-      </div>
+      
     </div>
 
     <div class="card">
